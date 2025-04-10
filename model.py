@@ -1,4 +1,3 @@
-
 import os 
 import sys
 current_path = os.path.abspath(os.path.dirname(__file__))
@@ -21,10 +20,10 @@ from dataLoad.preprocess import create_adjacency_matrix
 
 
 #%%
-class PENet2(nn.Module):
+class model(nn.Module):
     def __init__(self, eeg_chans=22, samples=1000, dropoutRate=0.5, kerSize_Tem=16,kerSize=32,F1=32, D=2,
                  tcn_filters=128, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
-        super(PENet2, self).__init__()
+        super(model, self).__init__()
         F2 = F1*D
         self.channel_positions = {
         1: (0, 7), 2: (-7, 3.5), 3: (-3.5, 3.5), 4: (0, 3.5), 5: (3.5, 3.5), 6: (7, 3.5),
@@ -126,8 +125,6 @@ class PENet2(nn.Module):
             norm      = .25
         )
 
-        self.ca = ChannelAttention(F2)
-        self.sa = SpatialAttention()
         self.se = SEAttention(F2)
 
         self.PEattention = PEAttention()
@@ -153,7 +150,6 @@ class PENet2(nn.Module):
                 bias = True
             )
         )
-        #self.adj_matrix = torch.Tensor(create_adjacency_matrix(threshold=5)).to('cuda:0') # 可训练的邻接矩阵
         self.adj_matrix = nn.Parameter(torch.randn(eeg_chans, eeg_chans))
         self.softmax = nn.Softmax(dim=-1)
 
@@ -186,7 +182,7 @@ class PENet2(nn.Module):
         if len(x.shape) is not 4:
             x = torch.unsqueeze(x, 1)
         pos = self.gaussian_adjacency_matrix(x,channel_positions=self.channel_positions)
-        # adj_matrix = (self.adj_matrix + self.adj_matrix.T) / 2  # 对称化
+        adj_matrix = (self.adj_matrix + self.adj_matrix.T) / 2  # 对称化
         adj_matrix = torch.sigmoid(pos)
         x_am = torch.matmul(adj_matrix, x)
         x1 = self.block1(x)
@@ -206,11 +202,6 @@ class PENet2(nn.Module):
         p2 = torch.transpose(p2, len(p2.shape)-2, len(p2.shape)-1) # (batch, F1*D, 15)
         p2 = torch.squeeze(p2, dim=2) # (batch, F1*D, 15)
 
-        # ca = self.ca(x2)
-        # x3 = ca * x2
-        # sa = self.sa(x3)
-        # x3 = sa *x3
-        # x4 = x3 
 
         x4 = self.se(x2)
         x4 = torch.squeeze(x4, dim=2) # NCW
