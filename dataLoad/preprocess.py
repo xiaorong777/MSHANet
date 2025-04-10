@@ -27,49 +27,6 @@ def calculate_distances(channel_positions):
     
     return distances
 
-# 生成通道位置编码
-
-def get_channel_positional_encoding(num_channels, d_model,alpha=0.7):
-    channel_positions = {
-    1: (0, 7), 2: (-7, 3.5), 3: (-3.5, 3.5), 4: (0, 3.5), 5: (3.5, 3.5), 6: (7, 3.5),
-    7: (-10.5,0), 8: (-7, 0), 9: (-3.5, 0), 10: (0, 0), 11: (3.5, 0), 12: (7, 0), 13: (10.5, 0),
-    14: (-7, -3.5), 15: (-3.5,-3.5), 16: (0, -3.5), 17: (3.5, -3.5), 18: (7, -3.5), 19: (-3.5, -7), 20: (0, -7),
-    21: (3.5, -7), 22: (0, -10.5)
-    }
-    
-
-    positions = np.array([channel_positions[i+1] for i in range(num_channels)])  # 获取位置数组
-    distances = calculate_distances(channel_positions)  # 计算距离矩阵
-    max_distance = np.max(distances)  # 获取最大距离，用于归一化
-    
-    pe = np.zeros((num_channels, d_model))  # 初始化位置编码矩阵
-    div_term = np.exp(np.arange(0, d_model, 2) * -(np.log(10000.0) / d_model))  # 计算缩放因子
-    
-
-    # for i in range(num_channels):
-    #     for j in range(num_channels):
-    #         weight = 1 - distances[i, j] / max_distance  # 距离越近，权重越大
-    #         pos_x, pos_y = positions[j]
-    #         pe[i, 0::2] += weight * (np.sin(pos_x * div_term) + np.sin(pos_y * div_term))  # 对偶数维度使用正弦函数
-    #         pe[i, 1::2] += weight * (np.cos(pos_x * div_term) + np.cos(pos_y * div_term))  # 对奇数维度使用余弦函数
-    
-
-    for i in range(num_channels):
-        for j in range(num_channels):
-            if i == j:
-                weight = alpha  # 保留自身位置编码的权重较大
-            else:
-                weight = (1 - alpha) * (1 - distances[i, j] / max_distance)  # 距离越近，权重越大
-            pos_x, pos_y = positions[j]
-            pe[i, 0::2] += weight * (np.sin(pos_x * div_term) + np.sin(pos_y * div_term))  # 对偶数维度使用正弦函数
-            pe[i, 1::2] += weight * (np.cos(pos_x * div_term) + np.cos(pos_y * div_term))  # 对奇数维度使用余弦函数
-
-    min_val = np.min(pe)
-    max_val = np.max(pe)
-    pe = (pe - min_val) / (max_val - min_val)
-
-    return pe
-
 
  # 生成时间位置编码
 def get_time_positional_encoding(seq_len, d_model):
@@ -140,11 +97,6 @@ def standardize_data_onLine2a(X_train, channels):
           X_train[:, j, :] = scaler.transform(X_train[:, j, :])
 
     return X_train
-
-
-
-
-
 
 
 #%%
