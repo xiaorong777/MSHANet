@@ -13,7 +13,6 @@ from torchstat import stat
 from utils.util import Conv2dWithConstraint, LinearWithConstraint,SEAttention
 from utils.util import ChannelAttention,SpatialAttention,PEAttention
 from utils.TCN_util import TemporalConvNet
-from models.EISATC_Fusion import TemporalInception
 from utils.MHSA_util import MultiHeadSelfAttention
 from utils.PENet_util import convInception
 from dataLoad.preprocess import create_adjacency_matrix
@@ -227,7 +226,7 @@ samples  = 1000
 ###============================ main function ============================###
 def main():
     input = torch.randn(32, channels, samples)
-    model = PENet2()
+    model = model()
     out = model(input)
     print('===============================================================')
     print('out', out.shape)
