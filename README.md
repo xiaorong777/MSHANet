@@ -10,4 +10,4 @@ Models were trained and tested by a single GPU, Nvidia GTX 3090 24GB (Driver Ver
 - NumPy: 1.23.5
 - scikit-learn: 1.5.2
 - SciPy: 1.14.1
-Refer to the documentation for more detailed dependency package information: requirement.txt
+ Refer to the documentation for more detailed dependency package information: [requirement.txt](https://github.com/xiaorong777/MS-HyAttNet/blob/main/requirements.txt)
