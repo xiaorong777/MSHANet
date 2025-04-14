@@ -1,9 +1,11 @@
 # MS-HyAttNet
 This repository provides code for the Multiscale Hybrid Attention Network (MS-HyAttNet) proposed in the paper: MS-HyAttNet: Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
+MS-HyAttNet model is composed of four main modules: the feature extraction module (FE), Squeeze-and-excitation attention module (SEA), multi-head self-attention module (MSA), and temporal convolutional network (TCN).
+
 ## Dataset
-The BCI Competition IV-2a and BCI Competition IV-2b dataset needs to be downloaded and the data path placed at `data_path` variable in `main.py` file. The dataset can be downloaded from [here](http://www.bbci.de/competition/iv/).
+The BCI Competition IV-2a and BCI Competition IV-2b dataset needs to be downloaded. The dataset can be downloaded from [here](http://www.bbci.de/competition/iv/).
 ## Development environment
-Models were trained and tested by a single GPU, [Nvidia GTX 3090 24GB](https://www.nvidia.com/en-me/geforce/graphics-cards/30-series/] (Driver Version: 510.108.03, CUDA 11.6), using Python 3.10.4 with PyTorch framework. Anaconda 3 was used on Ubuntu 18.04.6 LTS. The following packages are required:
+Models were trained and tested by a single GPU, [Nvidia GTX 3090 24GB](https://www.nvidia.com/en-me/geforce/graphics-cards/30-series/) (Driver Version: 510.108.03, CUDA 11.6), using Python 3.10.4 with PyTorch framework. Anaconda 3 was used on Ubuntu 18.04.6 LTS. The following packages are required:
 - PyTorch: 1.13.1
 - TorchVision: 0.14.1
 - matplotlib: 3.9.2
