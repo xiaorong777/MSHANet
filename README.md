@@ -1,7 +1,9 @@
 # MS-HyAttNet
 This repository provides code for the Multiscale Hybrid Attention Network (MS-HyAttNet) proposed in the paper: MS-HyAttNet: Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
+
 MS-HyAttNet model is composed of four main modules: the feature extraction module (FE), Squeeze-and-excitation attention module (SEA), multi-head self-attention module (MSA), and temporal convolutional network (TCN).
 
+![The overall architecture of MS-HyAttNet](图片链接 "可选标题")
 ## Dataset
 The BCI Competition IV-2a and BCI Competition IV-2b dataset needs to be downloaded. The dataset can be downloaded from [here](http://www.bbci.de/competition/iv/).
 ## Development environment
