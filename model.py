@@ -49,9 +49,9 @@ class model(nn.Module):
         self.block2 = nn.Sequential(
             convInception(
                 in_chan=1,
-                kerSize_1=(3,3),
-                kerSize_2=(5,5),
-                kerSize_3=(7,7),
+                kerSize_1=(3,1),
+                kerSize_2=(5,1),
+                kerSize_3=(7,1),
                 out_chan=F1,
                 bias=bias
             ),
@@ -78,8 +78,8 @@ class model(nn.Module):
             nn.BatchNorm2d(num_features=F1*D),
             nn.ELU(),
             nn.AvgPool2d(
-                kernel_size=(1,8),
-                stride=(1,8)
+                kernel_size=(1,16),
+                stride=(1,16)
             ),
             nn.Dropout(p=dropoutRate)
         )
@@ -104,8 +104,8 @@ class model(nn.Module):
             nn.BatchNorm2d(num_features=F2),
             nn.ELU(),
             nn.AvgPool2d(
-                kernel_size=(1,8),
-                stride=(1,8)
+                kernel_size=(1,4),
+                stride=(1,4)
             ),
             nn.Dropout(p=dropoutRate)
         )
