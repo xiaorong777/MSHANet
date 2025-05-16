@@ -52,6 +52,7 @@ class model(nn.Module):
                 kerSize_1=(3,1),
                 kerSize_2=(5,1),
                 kerSize_3=(7,1),
+                pool_ker=(22,1),
                 out_chan=F1,
                 bias=bias
             ),
