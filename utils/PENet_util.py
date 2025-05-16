@@ -54,7 +54,7 @@ class convInception(nn.Module):
         self.conv4 = Conv2dWithConstraint(
             in_channels=in_chan,
             out_channels=out_chan//4,
-            kernel_size=1,
+            kernel_size=(1,1),
             stride=1,
             bias=bias,
             max_norm=1.
