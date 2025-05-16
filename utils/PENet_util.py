@@ -48,10 +48,8 @@ class convInception(nn.Module):
             bias=bias,
             max_norm=1.
         )
-        self.pool4 = nn.MaxPool2d(
-            kernel_size=pool_ker,
-            stride=pool_str,
-            padding=(round(pool_ker[0]/2+0.1)-1,round(pool_ker[1]/2+0.1)-1)
+        self.pool4 = nn.AvgPool2d(
+            kernel_size=pool_ker
         )      
         self.conv4 = Conv2dWithConstraint(
             in_channels=in_chan,
@@ -68,5 +66,6 @@ class convInception(nn.Module):
         p2 = self.conv2(x)
         p3 = self.conv3(x)
         p4 = self.conv4(self.pool4(x))
+        p4 = p4.repeat(1,1,22,1)
         out = torch.cat((p1,p2,p3,p4), dim=1)
         return out
