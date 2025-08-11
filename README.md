@@ -1,9 +1,9 @@
-# MS-HyAttNet
-This repository provides code for the Multiscale Hybrid Attention Network (MS-HyAttNet) proposed in the paper: MS-HyAttNet: Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
+# MSHANet
+This repository provides code for the Multiscale Hybrid Attention Network (MSHANet) proposed in the paper: MSHANet: Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
 
-MS-HyAttNet model is composed of four main modules: the feature extraction module (FE), Squeeze-and-excitation attention module (SEA), multi-head self-attention module (MSA), and temporal convolutional network (TCN).
+MSHANet is composed of four main modules: the spatio-temporal feature extraction module (STFE), dynamic squeeze-and-excitation attention (DSEA), talking head self-attention (THSA), and temporal convolutional network (TCN).
 
-![The overall architecture of MS-HyAttNet](https://github.com/xiaorong777/MS-HyAttNet/blob/main/MS-HyAttNet.png)
+![The overall architecture of MSHANet](https://github.com/xiaorong777/MS-HyAttNet/blob/main/MSHANet.png)
 
 ## Dataset
 The BCI Competition IV-2a and BCI Competition IV-2b dataset needs to be downloaded. The dataset can be downloaded from [here](http://www.bbci.de/competition/iv/).
