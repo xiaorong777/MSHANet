@@ -20,7 +20,7 @@ class convInception(nn.Module):
 
         self.conv1 = Conv2dWithConstraint(
             in_channels=in_chan,
-            out_channels=out_chan//4,
+            out_channels=out_chan//3,
             kernel_size=kerSize_1,
             stride=kerStr,
             padding='same',
@@ -31,7 +31,7 @@ class convInception(nn.Module):
 
         self.conv2 = Conv2dWithConstraint(
             in_channels=in_chan,
-            out_channels=out_chan//4,
+            out_channels=out_chan//3,
             kernel_size=kerSize_2,
             stride=kerStr,
             padding='same',
@@ -41,21 +41,10 @@ class convInception(nn.Module):
 
         self.conv3 = Conv2dWithConstraint(
             in_channels=in_chan,
-            out_channels=out_chan//4,
+            out_channels=out_chan//3,
             kernel_size=kerSize_3,
             stride=kerStr,
             padding='same',
-            bias=bias,
-            max_norm=1.
-        )
-        self.pool4 = nn.AvgPool2d(
-            kernel_size=pool_ker
-        )      
-        self.conv4 = Conv2dWithConstraint(
-            in_channels=in_chan,
-            out_channels=out_chan//4,
-            kernel_size=(1,1),
-            stride=1,
             bias=bias,
             max_norm=1.
         )
@@ -65,7 +54,5 @@ class convInception(nn.Module):
         p1 = self.conv1(x)
         p2 = self.conv2(x)
         p3 = self.conv3(x)
-        p4 = self.conv4(self.pool4(x))
-        p4 = p4.repeat(1,1,22,1)
-        out = torch.cat((p1,p2,p3,p4), dim=1)
+        out = torch.cat((p1,p2,p3), dim=1)
         return out
