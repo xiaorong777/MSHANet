@@ -10,18 +10,19 @@ import torch.nn as nn
 import numpy as np
 from torchinfo import summary
 from torchstat import stat
-from utils.util import Conv2dWithConstraint, LinearWithConstraint,SEAttention
-from utils.util import ChannelAttention,SpatialAttention,PEAttention
+from utils.util import Conv2dWithConstraint, LinearWithConstraint,DSEAttention
+from utils.util import ChannelAttention,SpatialAttention,DCTAttention
 from utils.TCN_util import TemporalConvNet
-from utils.MHSA_util import MultiHeadSelfAttention
+from utils.MHSA_util import TalkingHeadSelfAttention
 from utils.PENet_util import convInception
 from dataLoad.preprocess import create_adjacency_matrix
 
 
 #%%
+
 class model(nn.Module):
-    def __init__(self, eeg_chans=22, samples=1000, dropoutRate=0.5, kerSize_Tem=16,kerSize=32,F1=32, D=2,
-                 tcn_filters=128, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
+    def __init__(self, eeg_chans=22, samples=1000, dropoutRate=0.5, kerSize_Tem=16,kerSize=32,F1=24, D=2,
+                 tcn_filters=64, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
         super(model, self).__init__()
         F2 = F1*D
         self.channel_positions = {
@@ -34,38 +35,18 @@ class model(nn.Module):
         1: (-3.5, 0), 2: (0, 0), 3: (3.5, 0)
         }
 
-        self.block1 = nn.Sequential(
-            nn.Conv2d(
-                in_channels=1, 
-                out_channels=F1, 
-                kernel_size=(1,kerSize), 
-                stride=1,
-                padding='same',
-                bias=bias
-            ), 
-            nn.BatchNorm2d(num_features=F1) 
-        )
 
-        self.block2 = nn.Sequential(
+        self.block1 = nn.Sequential(
             convInception(
                 in_chan=1,
-                kerSize_1=(3,1),
-                kerSize_2=(5,1),
-                kerSize_3=(7,1),
-                pool_ker=(22,1),
+                kerSize_1=(1,16),
+                kerSize_2=(1,32),
+                kerSize_3=(1,64),
                 out_chan=F1,
                 bias=bias
             ),
             nn.BatchNorm2d(num_features=F1),
         )
-        self.point_conv = Conv2dWithConstraint(
-                in_channels =2*F1,
-                out_channels=F1,
-                kernel_size =1,
-                stride      =1,
-                bias        =False
-            )
-
 
         self.depthwiseConv = nn.Sequential( 
             Conv2dWithConstraint(
@@ -79,8 +60,8 @@ class model(nn.Module):
             nn.BatchNorm2d(num_features=F1*D),
             nn.ELU(),
             nn.AvgPool2d(
-                kernel_size=(1,16),
-                stride=(1,16)
+                kernel_size=(1,8),
+                stride=(1,8)
             ),
             nn.Dropout(p=dropoutRate)
         )
@@ -105,8 +86,8 @@ class model(nn.Module):
             nn.BatchNorm2d(num_features=F2),
             nn.ELU(),
             nn.AvgPool2d(
-                kernel_size=(1,4),
-                stride=(1,4)
+                kernel_size=(1,8),
+                stride=(1,8)
             ),
             nn.Dropout(p=dropoutRate)
         )
@@ -118,16 +99,16 @@ class model(nn.Module):
             normalized_shape=F2,
             eps=1e-6
         )
-        self.multihead_attn = MultiHeadSelfAttention(
+        self.multihead_attn = TalkingHeadSelfAttention(
             embed_dim = F2,
-            heads     = 8,
+            heads     = 6,
             dropout   = 0.3,
             norm      = .25
         )
 
-        self.se = SEAttention(F2)
+        self.dse = DSEAttention(F2)
 
-        self.PEattention = PEAttention()
+        self.dctfa = DCTAttation()
 
         self.tcn_block = TemporalConvNet(
             num_inputs  = F2*2,
@@ -144,7 +125,7 @@ class model(nn.Module):
 
         self.class_head = nn.Sequential(
             LinearWithConstraint(
-                in_features=1088,
+                in_features=784,
                 out_features=n_classes,
                 max_norm=.25,
                 bias = True
@@ -186,11 +167,7 @@ class model(nn.Module):
         adj_matrix = torch.sigmoid(pos)
         x_am = torch.matmul(adj_matrix, x)
         x1 = self.block1(x)
-        x_am = self.block2(x_am)
-        x1 = torch.cat((x1,x_am),dim=1)
-        x1 = self.point_conv(x1)
-        pe = self.PEattention(x1)
-        x1 = pe * x1
+        x1 = self.dctfa(x1)
         x2 = self.depthwiseConv(x1)
         x2 = self.seqarableConv(x2)
 
@@ -198,12 +175,12 @@ class model(nn.Module):
         p1 = torch.squeeze(x2, dim=2) # (batch, F1*D, 15)
         p2 = torch.transpose(p1, len(p1.shape)-2, len(p1.shape)-1) # (batch, 15, F1*D)
         p2 = self.layerNorm(p2)
-        p2, attention_scores = self.multihead_attn(p2)
+        p2, attention_scores = self.talkinghead_attn(p2)
         p2 = torch.transpose(p2, len(p2.shape)-2, len(p2.shape)-1) # (batch, F1*D, 15)
         p2 = torch.squeeze(p2, dim=2) # (batch, F1*D, 15)
 
 
-        x4 = self.se(x2)
+        x4 = self.dse(x2)
         x4 = torch.squeeze(x4, dim=2) # NCW
         x4 = self.fal_am(x4)
         p3 = torch.cat((p1,p2),dim=1)
@@ -237,3 +214,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
