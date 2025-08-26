@@ -17,8 +17,44 @@ from utils.MHSA_util import TalkingHeadSelfAttention
 from utils.PENet_util import convInception
 from dataLoad.preprocess import create_adjacency_matrix
 
-
 #%%
+class EEGSpatialEncoder(nn.Module):
+    def __init__(self, channel_positions: dict, distance_metric='euclidean'):
+        super(EEGSpatialEncoder, self).__init__()
+        self.num_channels = len(channel_positions)
+        self.last_attn_weights = None
+
+        positions = torch.tensor([channel_positions[i+1] for i in range(self.num_channels)], dtype=torch.float32)
+        self.register_buffer('positions', positions)
+        self.register_buffer('adj_matrix', self._compute_adjacency(positions, metric=distance_metric))
+        self.spatial_proj = nn.Linear(self.num_channels, self.num_channels, bias=False)
+
+    def _compute_adjacency(self, pos, metric='euclidean'):
+        if metric == 'euclidean':
+            dists = torch.cdist(pos, pos, p=2)  # [C, C]
+        elif metric == 'cosine':
+            norm = F.normalize(pos, dim=-1)
+            dists = 1 - torch.matmul(norm, norm.T)
+        else:
+            raise ValueError("Unsupported metric")
+
+        sigma = torch.std(dists)
+        sim = torch.exp(-dists**2 / (2 * sigma**2))  # shape [C, C]
+        return sim
+
+    def forward(self, x):
+        """
+        x: Tensor shape [B, C=22, T]
+        return: same shape [B, 22, T], 加入空间编码
+        """
+        if len(x.shape) != 3:
+            x = torch.squeeze(x, 1)
+        B, C, T = x.shape
+        weight = self.spatial_proj(self.adj_matrix)  # [C, C]
+        x_out = torch.matmul(weight, x)  # [B, C, T]
+        x_out = x_out.unsqueeze(1)
+        return x_out
+
 
 class model(nn.Module):
     def __init__(self, eeg_chans=22, samples=1000, dropoutRate=0.5, kerSize_Tem=16,kerSize=32,F1=24, D=2,
@@ -214,4 +250,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
