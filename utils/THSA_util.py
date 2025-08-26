@@ -12,9 +12,9 @@ from utils.util import LinearWithConstraint
 
 
 #%%
-class TalkHeadSelfAttention(nn.Module):
+class TalkingHeadSelfAttention(nn.Module):
     def __init__(self, embed_dim, num_heads, dropout=0.1):
-        super(TalkHeadSelfAttention, self).__init__()
+        super(TalkingHeadSelfAttention, self).__init__()
         assert embed_dim % num_heads == 0, 
 
         self.embed_dim = embed_dim
