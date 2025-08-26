@@ -13,10 +13,10 @@ import torch.nn.functional as F
 
 
     #%% Inception DW Conv layer
-class temconvInception(nn.Module):
+class TemconvInception(nn.Module):
     def __init__(self, in_chan=1, kerSize_1=(1,16), kerSize_2=(1,32), kerSize_3=(1,64),
                  kerStr=1, out_chan=16, bias=False,pool_ker=(22,1), pool_str=1):
-        super(temconvInception, self).__init__()
+        super(TemconvInception, self).__init__()
 
         self.conv1 = nn.Conv2d(
             in_channels=in_chan,
