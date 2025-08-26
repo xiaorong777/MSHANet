@@ -11,7 +11,7 @@ import numpy as np
 from torchinfo import summary
 from torchstat import stat
 from utils.util import Conv2dWithConstraint, LinearWithConstraint,DSEAttention
-from utils.util import ChannelAttention,SpatialAttention,DCTAttention
+from utils.util import DCTFCAttention
 from utils.TCN_util import TemporalConvNet
 from utils.MHSA_util import TalkingHeadSelfAttention
 from utils.PENet_util import convInception
@@ -250,5 +250,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
