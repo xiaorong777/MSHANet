@@ -45,7 +45,7 @@ class EEGSpatialEncoder(nn.Module):
     def forward(self, x):
         """
         x: Tensor shape [B, C=22, T]
-        return: same shape [B, 22, T], 加入空间编码
+        return: same shape [B, 22, T]
         """
         if len(x.shape) != 3:
             x = torch.squeeze(x, 1)
@@ -71,9 +71,9 @@ class model(nn.Module):
         1: (-3.5, 0), 2: (0, 0), 3: (3.5, 0)
         }
 
-
+        self.eegSpatialEncoder = EEGSpatialEncoder(channel_positions=self.channel_positions, distance_metric='euclidean')
         self.block1 = nn.Sequential(
-            convInception(
+            TemconvInception(
                 in_chan=1,
                 kerSize_1=(1,16),
                 kerSize_2=(1,32),
@@ -83,7 +83,7 @@ class model(nn.Module):
             ),
             nn.BatchNorm2d(num_features=F1),
         )
-
+     self.DCTFCA = DCTFCAttention(F1)
         self.depthwiseConv = nn.Sequential( 
             Conv2dWithConstraint(
                 in_channels=F1, 
@@ -135,16 +135,13 @@ class model(nn.Module):
             normalized_shape=F2,
             eps=1e-6
         )
-        self.multihead_attn = TalkingHeadSelfAttention(
+        self.THSA = TalkingHeadSelfAttention(
             embed_dim = F2,
-            heads     = 6,
-            dropout   = 0.3,
-            norm      = .25
+            num_heads  = 6,
+            dropout   = 0.3
         )
 
-        self.dse = DSEAttention(F2)
-
-        self.dctfa = DCTAttation()
+        self.DSEA = DSEAttention(F2)
 
         self.tcn_block = TemporalConvNet(
             num_inputs  = F2*2,
@@ -167,43 +164,16 @@ class model(nn.Module):
                 bias = True
             )
         )
-        self.adj_matrix = nn.Parameter(torch.randn(eeg_chans, eeg_chans))
+
         self.softmax = nn.Softmax(dim=-1)
-
-    def gaussian_adjacency_matrix(self,data,channel_positions,sigma=2.0,device='cuda:0'):
-        coords = np.array([channel_positions[i+1] for i in range(22)])  # 获取位置数组
-        num_channels = coords.shape[0]
-        distance_matrix = np.zeros((num_channels, num_channels))
-        for i in range(num_channels):
-            for j in range(num_channels):
-                distance_matrix[i, j] = np.sqrt(np.sum((coords[i] - coords[j])**2))
-        gaussian_encoding_matrix = np.exp(-distance_matrix**2 / (2 * sigma**2))
-        pos =  torch.tensor(gaussian_encoding_matrix).float().to(device)
-        return pos
-    
-    def gaussian_adjacency_matrix_2b(self,data,channel_positions,sigma=1.0,device='cuda:0'):
-        coords = np.array([channel_positions[i+1] for i in range(3)])  # 获取位置数组
-        num_channels = coords.shape[0]
-        distance_matrix = np.zeros((num_channels, num_channels))
-        for i in range(num_channels):
-            for j in range(num_channels):
-                distance_matrix[i, j] = np.sqrt(np.sum((coords[i] - coords[j])**2))
-        gaussian_encoding_matrix = np.exp(-distance_matrix**2 / (2 * sigma**2))
-        pos =  torch.tensor(gaussian_encoding_matrix).float().to(device)
-        return pos
-
-
 
 
     def forward(self, x):
         if len(x.shape) is not 4:
             x = torch.unsqueeze(x, 1)
-        pos = self.gaussian_adjacency_matrix(x,channel_positions=self.channel_positions)
-        adj_matrix = (self.adj_matrix + self.adj_matrix.T) / 2  # 对称化
-        adj_matrix = torch.sigmoid(pos)
-        x_am = torch.matmul(adj_matrix, x)
+        x = self.eegSpatialEncoder(x)
         x1 = self.block1(x)
-        x1 = self.dctfa(x1)
+        x1 = self.DCTFCA(x1)
         x2 = self.depthwiseConv(x1)
         x2 = self.seqarableConv(x2)
 
@@ -211,12 +181,19 @@ class model(nn.Module):
         p1 = torch.squeeze(x2, dim=2) # (batch, F1*D, 15)
         p2 = torch.transpose(p1, len(p1.shape)-2, len(p1.shape)-1) # (batch, 15, F1*D)
         p2 = self.layerNorm(p2)
-        p2, attention_scores = self.talkinghead_attn(p2)
+        p2,attn_logits,attn_scores,attn_weights= self.THSA(p2)
+        self.attn_logits = attn_logits.detach()  
+        self.attn_scores = attn_scores.detach()  
+        self.attn_weights = attn_weights.detach()  
+        self.pre_softmax_mix = self.multihead_attn.pre_softmax_mix.detach()  
+        self.post_softmax_mix = self.multihead_attn.post_softmax_mix.detach()
+        self.pre_softmax_mix
         p2 = torch.transpose(p2, len(p2.shape)-2, len(p2.shape)-1) # (batch, F1*D, 15)
         p2 = torch.squeeze(p2, dim=2) # (batch, F1*D, 15)
+        p2 = self.pool(p2)
 
 
-        x4 = self.dse(x2)
+        x4 = self.DSEA(x2)
         x4 = torch.squeeze(x4, dim=2) # NCW
         x4 = self.fal_am(x4)
         p3 = torch.cat((p1,p2),dim=1)
@@ -224,11 +201,9 @@ class model(nn.Module):
         p3 = self.tcn_block(p3)
         p3 = p3[:, :, -1] # NC
         out_tcn = self.fal_tcn(p3)
-        out_tcn = torch.cat((x4, out_tcn), dim=-1)
-        # # 注册钩子
-        # hook_handle = out_tcn.register_hook(get_activation('out_tcn'))
-        out_tcn = self.class_head(out_tcn)
-        out = self.softmax(out_tcn)
+        out = torch.cat((x4, out_tcn), dim=-1)
+        out = self.class_head(out)
+        out = self.softmax(out)
         return out
 
 
@@ -250,6 +225,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
