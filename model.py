@@ -14,7 +14,7 @@ from utils.util import Conv2dWithConstraint, LinearWithConstraint,DSEAttention
 from utils.util import DCTFCAttention
 from utils.TCN_util import TemporalConvNet
 from utils.MHSA_util import TalkingHeadSelfAttention
-from utils.PENet_util import convInception
+from utils.PENet_util import TemconvInception
 from dataLoad.preprocess import create_adjacency_matrix
 
 #%%
@@ -250,6 +250,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
