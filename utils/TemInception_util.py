@@ -13,42 +13,45 @@ import torch.nn.functional as F
 
 
     #%% Inception DW Conv layer
-class convInception(nn.Module):
-    def __init__(self, in_chan=1, kerSize_1=(3,3), kerSize_2=(5,5), kerSize_3=(7,7),
-                 kerStr=1, out_chan=16, bias=False,pool_ker=(3,3), pool_str=1):
-        super(convInception, self).__init__()
+class temconvInception(nn.Module):
+    def __init__(self, in_chan=1, kerSize_1=(1,16), kerSize_2=(1,32), kerSize_3=(1,64),
+                 kerStr=1, out_chan=16, bias=False,pool_ker=(22,1), pool_str=1):
+        super(temconvInception, self).__init__()
 
-        self.conv1 = Conv2dWithConstraint(
+        self.conv1 = nn.Conv2d(
             in_channels=in_chan,
             out_channels=out_chan//3,
             kernel_size=kerSize_1,
             stride=kerStr,
             padding='same',
             bias=bias,
-            max_norm=1.
         )
 
 
-        self.conv2 = Conv2dWithConstraint(
+        self.conv2 = nn.Conv2d(
             in_channels=in_chan,
             out_channels=out_chan//3,
             kernel_size=kerSize_2,
             stride=kerStr,
             padding='same',
             bias=bias,
-            max_norm=1.
         )
 
-        self.conv3 = Conv2dWithConstraint(
+        self.conv3 = nn.Conv2d(
             in_channels=in_chan,
             out_channels=out_chan//3,
             kernel_size=kerSize_3,
             stride=kerStr,
             padding='same',
             bias=bias,
-            max_norm=1.
         )
-
+        # self.point_conv = Conv2dWithConstraint(
+        #         in_channels =(out_chan*3)//2,
+        #         out_channels=out_chan,
+        #         kernel_size =1,
+        #         stride      =1,
+        #         bias        =False
+        #     )
 
     def forward(self, x):
         p1 = self.conv1(x)
