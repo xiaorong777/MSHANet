@@ -134,7 +134,7 @@ class PEAttention(nn.Module):
 class SEAttention(nn.Module):
     def __init__(self, channels, reduction=8):
         super(SEAttention, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))  # 使用 AdaptiveAvgPool2d 处理 (B, C, 1, W) 输入
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))  #  (B, C, 1, W) 
         self.fc = nn.Sequential(
             nn.Linear(channels, channels // reduction, bias=False),
             nn.ReLU(inplace=True),
@@ -143,7 +143,44 @@ class SEAttention(nn.Module):
         )
 
     def forward(self, x):
-        b, c, _, _ = x.size()  # 假设输入为 (batch_size, channels, 1, width)
-        y = self.avg_pool(x).view(b, c)  # 全局平均池化，变为 (batch_size, channels)
-        y = self.fc(y).view(b, c, 1, 1)  # 通过全连接层，变回 (batch_size, channels, 1, 1)
-        return x * y.expand_as(x)  # 注意力加权通道
+        b, c, _, _ = x.size()  #  (batch_size, channels, 1, width)
+        y = self.avg_pool(x).view(b, c)  #  (batch_size, channels)
+        y = self.fc(y).view(b, c, 1, 1)  #  (batch_size, channels, 1, 1)
+        return x * y.expand_as(x)  # 
+
+class DSEAttention(nn.Module):
+    def __init__(self, channels, reduction_list=[4, 8, 16]):
+        super().__init__()
+        self.branches = nn.ModuleList([
+           SEAttention(channels, r) for r in reduction_list
+        ])
+        self.num_branches = len(reduction_list)
+
+        self.gate = nn.Sequential(
+            # nn.Linear(channels, channels // 4),
+            # nn.ReLU(inplace=True),
+            nn.Linear(channels, self.num_branches),
+            nn.Softmax(dim=1)  #  (B, K)
+        )
+
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):  # x: (B, C, 1, T)
+        B, C, _, T = x.shape
+
+        # Global AvgPool over temporal dim
+        z = x.mean(dim=-1).squeeze(2)  # shape: (B, C)
+
+        gate_weights = self.gate(z)  # shape: (B, K)
+
+        branch_outputs = []
+        for branch in self.branches:
+            out = branch(z)  # shape: (B, C)
+            branch_outputs.append(out)
+        # Stack to (B, K, C)
+        stacked = torch.stack(branch_outputs, dim=1)  # (B, K, C)
+        gate_weights = gate_weights.unsqueeze(-1)  # (B, K, 1)
+        fused = (stacked * gate_weights).sum(dim=1)  # (B, C)
+        scale = self.sigmoid(fused).unsqueeze(2).unsqueeze(-1)  # (B, C, 1, 1)
+
+        return x * scale.expand_as(x)  
