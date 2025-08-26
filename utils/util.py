@@ -150,7 +150,7 @@ class SEAttention(nn.Module):
 
 class DSEAttention(nn.Module):
     def __init__(self, channels, reduction_list=[4, 8, 16]):
-        super().__init__()
+        super(DSEAttention, self).__init__()
         self.branches = nn.ModuleList([
            SEAttention(channels, r) for r in reduction_list
         ])
@@ -184,3 +184,48 @@ class DSEAttention(nn.Module):
         scale = self.sigmoid(fused).unsqueeze(2).unsqueeze(-1)  # (B, C, 1, 1)
 
         return x * scale.expand_as(x)  
+
+class DCTFAttention(nn.Module):
+    def __init__(self, channels, reduction=8, fs=250, band=(8, 30)):
+        super(DCTFAttention, self).__init__()
+        self.fs = fs
+        self.band = band
+        self.reduction = reduction
+
+        self.fc = nn.Sequential(
+            nn.Linear(channels, channels // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channels // reduction, channels, bias=False),
+            nn.Sigmoid()
+        )
+
+    def dct_2d(self, x):
+        # x: [B, C1, C2, T] -> apply 2D-DCT on last two dims (C2, T)
+        # Step 1: DCT over time (T)
+        N = x.size(-1)
+        x_v = torch.cat([x, x.flip(dims=[-1])], dim=-1)  # [B, C1, C2, 2T]
+        X = torch.fft.fft(x_v, dim=-1).real[..., :N] / 2  # [B, C1, C2, T]
+
+        # Step 2: DCT over spatial (C2)
+        N2 = x.size(-2)
+        X_v = torch.cat([X, X.flip(dims=[-2])], dim=-2)  # [B, C1, 2C2, T]
+        X2D = torch.fft.fft(X_v, dim=-2).real[..., :N2, :] / 2  # [B, C1, C2, T]
+
+        return X2D
+
+    def forward(self, x):  # x: [B, C1, C2, T]
+        B, C1, C2, T = x.shape
+
+        x_freq = self.dct_2d(x)  # [B, C1, C2, T]
+
+        f_step = self.fs / (2 * T)
+        low_idx = int(self.band[0] / f_step)
+        high_idx = int(self.band[1] / f_step)
+
+        band_power = (x_freq[..., low_idx:high_idx] ** 2).mean(dim=-1)  # [B, C1, C2]
+        channel_power = band_power.mean(dim=-1)  # [B, C1]
+
+        attn = self.fc(channel_power).unsqueeze(-1).unsqueeze(-1)  # [B, C1, 1, 1]
+
+        return x * attn
+
