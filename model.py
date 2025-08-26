@@ -15,7 +15,6 @@ from utils.util import DCTFCAttention
 from utils.TCN_util import TemporalConvNet
 from utils.MHSA_util import TalkingHeadSelfAttention
 from utils.PENet_util import TemconvInception
-from dataLoad.preprocess import create_adjacency_matrix
 
 #%%
 class EEGSpatialEncoder(nn.Module):
@@ -61,7 +60,7 @@ class model(nn.Module):
                  tcn_filters=64, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
         super(model, self).__init__()
         F2 = F1*D
-        self.channel_positions = {
+        self.channel_positions_2a = {
         1: (0, 7), 2: (-7, 3.5), 3: (-3.5, 3.5), 4: (0, 3.5), 5: (3.5, 3.5), 6: (7, 3.5),
         7: (-10.5,0), 8: (-7, 0), 9: (-3.5, 0), 10: (0, 0), 11: (3.5, 0), 12: (7, 0), 13: (10.5, 0),
         14: (-7, -3.5), 15: (-3.5,-3.5), 16: (0, -3.5), 17: (3.5, -3.5), 18: (7, -3.5), 19: (-3.5, -7), 20: (0, -7),
@@ -71,7 +70,7 @@ class model(nn.Module):
         1: (-3.5, 0), 2: (0, 0), 3: (3.5, 0)
         }
 
-        self.eegSpatialEncoder = EEGSpatialEncoder(channel_positions=self.channel_positions, distance_metric='euclidean')
+        self.eegSpatialEncoder = EEGSpatialEncoder(channel_positions=self.channel_positions_2a, distance_metric='euclidean')
         self.block1 = nn.Sequential(
             TemconvInception(
                 in_chan=1,
@@ -225,6 +224,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
