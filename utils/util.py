@@ -185,9 +185,9 @@ class DSEAttention(nn.Module):
 
         return x * scale.expand_as(x)  
 
-class DCTFAttention(nn.Module):
+class DCTFCAttention(nn.Module):
     def __init__(self, channels, reduction=8, fs=250, band=(8, 30)):
-        super(DCTFAttention, self).__init__()
+        super(DCTFCAttention, self).__init__()
         self.fs = fs
         self.band = band
         self.reduction = reduction
