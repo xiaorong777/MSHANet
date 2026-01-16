@@ -1,5 +1,9 @@
 # MSHANet
-This repository provides code for the Multiscale Hybrid Attention Network (MSHANet) proposed in the paper: MSHANet: Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
+This repository provides code for the Multiscale Hybrid Attention Network (MSHANet) proposed in the paper: MSHANet: A Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding
+
+Authors: Yanlong Zhao, Dianguo Cao, Haoyang Yu, Guangjin Liang, Zhicheng Chen
+
+Collaborative Innovation Centre for Rehabilitation and Care Robotics, College of Engineering, Qufu Normal University, Rizhao, China
 
 MSHANet is composed of four main modules: the spatio-temporal feature extraction module (STFE), dynamic squeeze-and-excitation attention (DSEA), talking head self-attention (THSA), and temporal convolutional network (TCN).
 
