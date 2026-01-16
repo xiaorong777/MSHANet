@@ -57,7 +57,7 @@ class EEGSpatialEncoder(nn.Module):
 
 class model(nn.Module):
     def __init__(self, eeg_chans=22, samples=1000, dropoutRate=0.5, kerSize_Tem=16,kerSize=32,F1=24, D=2,
-                 tcn_filters=64, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
+                 tcn_filters=32, tcn_kernelSize=4, tcn_dropout=0.3, bias=False, n_classes=4):
         super(model, self).__init__()
         F2 = F1*D
         self.channel_positions_2a = {
@@ -224,6 +224,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
