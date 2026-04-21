@@ -184,8 +184,8 @@ class model(nn.Module):
         self.attn_logits = attn_logits.detach()  
         self.attn_scores = attn_scores.detach()  
         self.attn_weights = attn_weights.detach()  
-        self.pre_softmax_mix = self.multihead_attn.pre_softmax_mix.detach()  
-        self.post_softmax_mix = self.multihead_attn.post_softmax_mix.detach()
+        self.pre_softmax_mix = self.THSA.pre_softmax_mix.detach()  
+        self.post_softmax_mix = self.THSA.post_softmax_mix.detach()
         self.pre_softmax_mix
         p2 = torch.transpose(p2, len(p2.shape)-2, len(p2.shape)-1) # (batch, F1*D, 15)
         p2 = torch.squeeze(p2, dim=2) # (batch, F1*D, 15)
