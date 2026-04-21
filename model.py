@@ -13,7 +13,7 @@ from torchstat import stat
 from utils.util import Conv2dWithConstraint, LinearWithConstraint,DSEAttention
 from utils.util import DCTFCAttention
 from utils.TCN_util import TemporalConvNet
-from utils.MHSA_util import TalkingHeadSelfAttention
+from utils.THSA_util import TalkingHeadSelfAttention
 from utils.TemInception_util import TemconvInception
 
 #%%
