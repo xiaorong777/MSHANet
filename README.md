@@ -22,4 +22,20 @@ Models were trained and tested by a single GPU, [Nvidia GTX 3090 24GB](https://w
 
 Refer to the documentation for more detailed dependency package information: [requirement.txt](https://github.com/xiaorong777/MS-HyAttNet/blob/main/requirements.txt)
 
+## References
+If you find this work useful in your research, please cite our paper using the following BibTeX entry:
+
+```bibtex
+@ARTICLE{11348037,
+  author={Zhao, Yanlong and Cao, Dianguo and Yu, Haoyang and Liang, Guangjin and Chen, Zhicheng},
+  journal={IEEE Transactions on Biomedical Engineering}, 
+  title={MSHANet: A Multiscale Hybrid Attention Network for Motor Imagery EEG Decoding}, 
+  year={2026},
+  volume={73},
+  number={10},
+  pages={3469-3479},
+  keywords={Feature extraction;Electroencephalography;Electrodes;Decoding;Brain modeling;Convolutional neural networks;Motors;Convolution;Kernel;Encoding;Brain-computer interface (BCI);motor imagery (MI);spatial structure encoder;attention mechanism;temporal convolution network (TCN)},
+  doi={10.1109/TBME.2026.3653824}}
+
+```
 
