@@ -22,7 +22,7 @@ Models were trained and tested by a single GPU, [Nvidia GTX 3090 24GB](https://w
 
 Refer to the documentation for more detailed dependency package information: [requirement.txt](https://github.com/xiaorong777/MS-HyAttNet/blob/main/requirements.txt)
 
-## References
+## Citation
 If you find this work useful in your research, please cite our paper using the following BibTeX entry:
 
 ```bibtex
